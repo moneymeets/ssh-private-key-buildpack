@@ -10,12 +10,20 @@ function indent() {
 
 ENV_DIR=${3:-}
 ssh_key="$(cat $ENV_DIR/SSH_KEY)"
+
+
+BUILD_DIR=$1
+CERT_URL=https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
+
+echo "-----> Download certificate from ${CERT_URL}"
+curl --silent ${CERT_URL} > $BUILD_DIR/rds-combined-ca-bundle.pem | indent
+
 if [ -f $ENV_DIR/SSH_HOSTS ]; then
 	ssh_hosts="$(cat $ENV_DIR/SSH_HOSTS)"
-	echo "Setting SSH hosts to: $ssh_hosts"
+	echo "Setting SSH hosts to: $ssh_hosts" | indent
 else
 	ssh_hosts="git@github.com"
-	echo "SSH_HOSTS is not set, using default git@github.com"
+	echo "SSH_HOSTS is not set, using default git@github.com" | indent
 fi
 
 if [ "$ssh_key" != "" ]; then
@@ -23,9 +31,9 @@ if [ "$ssh_key" != "" ]; then
 
 	# The .ssh needs to be located in the home directory which is different to the
 	# home directory of the built machine. The symlink resolves the issue.
-	mkdir "$1/.ssh"
-	ln -s "$1/.ssh" "$HOME/.ssh"
-	echo "$ssh_key" | base64 --decode > "$HOME/.ssh/id_rsa"
+	mkdir "$BUILD_DIR/.ssh"
+	ln -s "$BUILD_DIR/.ssh" "$HOME/.ssh"
+	echo "$ssh_key" | base64 --decode > "$HOME/.ssh/id_rsa" | indent
 
 	IFS=',' read -ra HOST <<< "$ssh_hosts"
 	for i in "${HOST[@]}"; do
